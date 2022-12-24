@@ -1,0 +1,36 @@
+version: "3.4"
+
+services:
+  mysql:
+    image: mysql
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: ${db_root_password}
+      MYSQL_DATABASE: ${database}
+      MYSQL_USER: ${db_user}
+      MYSQL_PASSWORD: ${db_password}
+    volumes:
+      - mysql_data:/var/lib/mysql
+  redis:
+    image: redis:6.2-alpine
+    restart: always
+    command: redis-server --save 20 1 --loglevel warning
+    volumes: 
+      - cache:/data
+  app:
+    build: .
+    restart: always
+    ports:
+      - '8000:8000'
+    command: uvicorn main:app --host 0.0.0.0 --port 8000 --reload
+    volumes:
+      - .:/usr/app
+    depends_on:
+      - mysql
+      - redis
+    env_file: .env
+
+volumes:
+  mysql_data:
+  cache:
+  .:
